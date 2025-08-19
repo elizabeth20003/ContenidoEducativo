@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -22,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -32,47 +34,157 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// ==============================================================================
+// MODELO DE DATOS - SEPARADO Y MODULAR
+// ==============================================================================
+
+data class Subject(
+    val id: String,
+    val name: String,
+    val iconRes: Int,
+    val color: Color,
+    val description: String = "Toca para aprender"
+)
+
+// ==============================================================================
+// REPOSITORIO DE MATERIAS - GESTION MODULAR DE MEMORIA
+// ==============================================================================
+
+object SubjectRepository {
+
+    // Lazy initialization - solo se crean cuando se necesitan
+    private val mathematicsModule by lazy {
+        Subject(
+            id = "math",
+            name = "Matemáticas",
+            iconRes = R.drawable.ic_math,
+            color = Color(0xFF007BFF)
+        )
+    }
+
+    private val spanishModule by lazy {
+        Subject(
+            id = "spanish",
+            name = "Español",
+            iconRes = R.drawable.ic_book,
+            color = Color(0xFF0066CC)
+        )
+    }
+
+    private val socialSciencesModule by lazy {
+        Subject(
+            id = "social",
+            name = "Ciencias Sociales",
+            iconRes = R.drawable.ic_globe,
+            color = Color(0xFF06677F)
+        )
+    }
+
+    private val naturalSciencesModule by lazy {
+        Subject(
+            id = "natural",
+            name = "Ciencias Naturales",
+            iconRes = R.drawable.ic_science,
+            color = Color(0xFF4A9EFF)
+        )
+    }
+
+    private val statisticsModule by lazy {
+        Subject(
+            id = "statistics",
+            name = "Estadística",
+            iconRes = R.drawable.ic_chart,
+            color = Color(0xFF0080FF)
+        )
+    }
+
+    private val ethicsModule by lazy {
+        Subject(
+            id = "ethics",
+            name = "Ética",
+            iconRes = R.drawable.ic_ethics,
+            color = Color(0xFF005BB5)
+        )
+    }
+
+    // Función para obtener todas las materias disponibles
+    fun getAvailableSubjects(): List<Subject> {
+        return listOf(
+            mathematicsModule,
+            spanishModule,
+            socialSciencesModule,
+            naturalSciencesModule,
+            statisticsModule,
+            ethicsModule
+        )
+    }
+
+    // Función para obtener una materia específica por ID
+    fun getSubjectById(id: String): Subject? {
+        return when (id) {
+            "math" -> mathematicsModule
+            "spanish" -> spanishModule
+            "social" -> socialSciencesModule
+            "natural" -> naturalSciencesModule
+            "statistics" -> statisticsModule
+            "ethics" -> ethicsModule
+            else -> null
+        }
+    }
+
+    // Función para cargar materias de manera dinámica (simula carga desde base de datos)
+    fun loadSubjectsAsync(callback: (List<Subject>) -> Unit) {
+        // Simula carga asíncrona - en la vida real esto vendría de una API o BD
+        callback(getAvailableSubjects())
+    }
+}
+
+// ==============================================================================
+// COMPONENTE PRINCIPAL CON GESTION MODULAR
+// ==============================================================================
+
 @Composable
 fun HomeScreen() {
+    // Usando remember para evitar recrear la lista en cada recomposición
+    val subjects = remember { SubjectRepository.getAvailableSubjects() }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFE6F7FF))
     ) {
         item {
-            // Encabezado con título
             Header()
         }
 
         item {
-            // Título principal
             TitleSection()
         }
 
+        // Usando items() para renderizado eficiente de la lista
         item {
-            // Tarjetas por categoría
-            SubjectGrid()
+            SubjectGrid(subjects = subjects)
         }
 
         item {
-            // Footer
             Footer()
         }
     }
 }
 
+// ==============================================================================
+// COMPONENTES REUTILIZABLES
+// ==============================================================================
+
 @Composable
 fun Header() {
-    // Tarjeta superior del header con color y esquinas redondeadas abajo
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            //sombra
             .shadow(4.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF003366)),
         shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
     ) {
-        // Fila principal: título a la izquierda, botones a la derecha
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -86,27 +198,34 @@ fun Header() {
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
-            // Fila secundaria con los botones de navegación
+
             Row {
-                Button(
-                    onClick = { /* Navegar a inicio */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF06677F)),
-                    shape = RoundedCornerShape(25.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Text("Inicio", color = Color.White, fontSize = 12.sp)
-                }
+                NavigationButton(
+                    text = "Inicio",
+                    onClick = { /* Navegar a inicio */ }
+                )
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = { /* Navegar a evaluaciones */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF06677F)),
-                    shape = RoundedCornerShape(25.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Text("Evaluaciones", color = Color.White, fontSize = 12.sp)
-                }
+                NavigationButton(
+                    text = "Evaluaciones",
+                    onClick = { /* Navegar a evaluaciones */ }
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun NavigationButton(
+    text: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF06677F)),
+        shape = RoundedCornerShape(25.dp),
+        modifier = Modifier.height(36.dp)
+    ) {
+        Text(text, color = Color.White, fontSize = 12.sp)
     }
 }
 
@@ -137,38 +256,30 @@ fun TitleSection() {
 }
 
 @Composable
-fun SubjectGrid() {
-    // Lista de materias con nombre, ícono y color asociado
-    val subjects = listOf(
-        Subject("Matemáticas", R.drawable.ic_math, Color(0xFF007BFF)),
-        Subject("Español", R.drawable.ic_book, Color(0xFF0066CC)),
-        Subject("Ciencias Sociales", R.drawable.ic_globe, Color(0xFF06677F)),
-        Subject("Ciencias Naturales", R.drawable.ic_science, Color(0xFF4A9EFF)),
-        Subject("Estadística", R.drawable.ic_chart, Color(0xFF0080FF)),
-        Subject("Ética", R.drawable.ic_ethics, Color(0xFF005BB5))
-    )
-   // Contenedor vertical para las tarjetas de materias
+fun SubjectGrid(subjects: List<Subject>) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         subjects.forEach { subject ->
-            SubjectCard(subject = subject)
+            SubjectCard(
+                subject = subject,
+                onSubjectClick = { clickedSubject ->
+                    // Manejar click en la materia
+                    handleSubjectNavigation(clickedSubject)
+                }
+            )
         }
 
-        // Espacio extra antes del footer
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
-// Modelo de datos para representar una materia
-data class Subject(
-    val name: String,
-    val iconRes: Int,
-    val color: Color
-)
 
 @Composable
-fun SubjectCard(subject: Subject) {
+fun SubjectCard(
+    subject: Subject,
+    onSubjectClick: (Subject) -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -182,55 +293,88 @@ fun SubjectCard(subject: Subject) {
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ícono circular con drawable
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .background(subject.color.copy(alpha = 0.1f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = subject.iconRes),
-                    contentDescription = "Icono de ${subject.name}",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+            // Ícono circular
+            SubjectIcon(
+                iconRes = subject.iconRes,
+                color = subject.color,
+                contentDescription = "Icono de ${subject.name}"
+            )
 
             Spacer(modifier = Modifier.width(20.dp))
 
             // Contenido central
-            Column(
+            SubjectInfo(
+                name = subject.name,
+                description = subject.description,
                 modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    subject.name,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF003366)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "Toca para aprender",
-                    fontSize = 12.sp,
-                    color = Color(0xFF0066CC)
-                )
-            }
+            )
 
             // Botón de acción
-            Button(
-                onClick = { /* Ir a la sección */ },
-                shape = RoundedCornerShape(30.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
-                modifier = Modifier.height(40.dp)
-            ) {
-                Text(
-                    "Entrar",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            ActionButton(
+                onClick = { onSubjectClick(subject) }
+            )
         }
+    }
+}
+
+@Composable
+private fun SubjectIcon(
+    iconRes: Int,
+    color: Color,
+    contentDescription: String
+) {
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .background(color.copy(alpha = 0.1f), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(32.dp)
+        )
+    }
+}
+
+@Composable
+private fun SubjectInfo(
+    name: String,
+    description: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            name,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF003366)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            description,
+            fontSize = 12.sp,
+            color = Color(0xFF0066CC)
+        )
+    }
+}
+
+@Composable
+private fun ActionButton(
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(30.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
+        modifier = Modifier.height(40.dp)
+    ) {
+        Text(
+            "Entrar",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -271,6 +415,40 @@ fun Footer() {
                 color = Color(0xFF0066CC),
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+// ==============================================================================
+// FUNCIONES DE UTILIDAD
+// ==============================================================================
+
+private fun handleSubjectNavigation(subject: Subject) {
+    // Aquí manejarías la navegación a cada materia específica
+    when (subject.id) {
+        "math" -> {
+            // Navegar a módulo de matemáticas
+            println("Navegando a Matemáticas")
+        }
+        "spanish" -> {
+            // Navegar a módulo de español
+            println("Navegando a Español")
+        }
+        "social" -> {
+            // Navegar a módulo de ciencias sociales
+            println("Navegando a Ciencias Sociales")
+        }
+        "natural" -> {
+            // Navegar a módulo de ciencias naturales
+            println("Navegando a Ciencias Naturales")
+        }
+        "statistics" -> {
+            // Navegar a módulo de estadística
+            println("Navegando a Estadística")
+        }
+        "ethics" -> {
+            // Navegar a módulo de ética
+            println("Navegando a Ética")
         }
     }
 }
