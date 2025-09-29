@@ -110,11 +110,13 @@ fun TitleSection() {
     }
 }
 @Composable
+//lista se pasa como parametro
 fun SubjectGrid(subjects: List<Subject>,onSubjectClick: (Subject) -> Unit) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        //se pasa la lista c
         subjects.forEach { subject ->
             SubjectCard(
                 subject = subject,
@@ -128,7 +130,9 @@ fun SubjectGrid(subjects: List<Subject>,onSubjectClick: (Subject) -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
+
 @Composable
+//base de la tarjeta
 fun SubjectCard(
     subject: Subject,
     onSubjectClick: (Subject) -> Unit = {}

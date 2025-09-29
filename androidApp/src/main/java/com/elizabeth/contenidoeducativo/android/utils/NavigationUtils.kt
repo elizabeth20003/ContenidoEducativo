@@ -3,7 +3,7 @@ package com.elizabeth.contenidoeducativo.android.utils
 import com.elizabeth.contenidoeducativo.android.data.Subject
 
 fun handleSubjectNavigation(subject: Subject) {
-    // Aquí manejarías la navegación a cada materia específica
+    // cuando esto esté listo, aquí se navega a otra pantalla
     when (subject.id) {
         "math" -> {
             // Navegar a módulo de matemáticas

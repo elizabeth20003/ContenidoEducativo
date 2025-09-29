@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "ContenidoEducativo"
 include(":androidApp")
 include(":shared")
+
